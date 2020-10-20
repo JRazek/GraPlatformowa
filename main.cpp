@@ -2,6 +2,24 @@
 
 #include <vector>
 using namespace std;
+class Edge;
+class Vertex;
+
+class Edge{
+    Vertex * input;
+    Vertex * output;
+    int value;
+};
+class Vertex{
+    vector<Edge *> edges;
+    int id;
+    Vertex(int id){
+        this->id = id;
+    }
+    void addEdge(Edge * e){
+        this->edges.push_back(e);
+    }
+};
 
 vector<string> split(string str, char divider){
     vector<string> result;
