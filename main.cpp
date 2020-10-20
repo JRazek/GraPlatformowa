@@ -10,6 +10,9 @@ class Edge{
     Vertex * output;
     int value;
 public:
+    Edge(int value){
+        this->value = value;
+    }
     void setInputVertex(Vertex * v){
         this->input = v;
     }
@@ -59,28 +62,37 @@ int main() {
     int platforms = stoi(args[0]);
     int length = stoi(args[1]);
     int requests = stoi(args[2]);
-    int startPos = 0;
 
     vector<Vertex *> vertices;
 
     for(int i = 0; i < platforms; i ++){
         getline(cin, line);
         args = split(line, ' ');
-        int holes = stoi(args[0]);
-        for(int j = 0; j < holes + 1; j++){
-            int holePos = stoi(args[j+1]);
-            Vertex * v = new Vertex(i*j + j, startPos, holePos - 1, i);
-            Edge * edge = new Edge();
-            edge->setInputVertex(v);
-            v->addEdge(edge);
-            vertices.push_back(v);
-            if(j != 0){
-                Edge * prevEdge = vertices.at(i * j + j - 1)->getEdges().at(0);//there must be just one.
-                prevEdge->setOutputVertex(v);
-                v->addEdge(prevEdge);
+        int holesCount = stoi(args[0]);
+        int startPos = 0;
+
+        for(int j = 0; j < holesCount + 1; j++){//because there are n+1 platforms per level
+            int endPos;
+            if(j == holesCount){
+                endPos = length - 1;
+            }else{
+                endPos = stoi(args[j+1]) - 2;
             }
-            startPos = holePos + 1;
+            Vertex * v = new Vertex(i * j + j, startPos, endPos, i);
+            vertices.push_back(v);
+            if(j != holesCount){
+                Edge * e = new Edge(1);
+                e->setInputVertex(v);
+                v->addEdge(e);
+                startPos = stoi(args[j + 1]);
+            }
+            if(j != 0){
+                Edge * prevEdge = vertices.at(j * i + j - 1)->getEdges().at(0); //there must be only one edge!
+                v->addEdge(prevEdge);
+                prevEdge->setOutputVertex(v);
+            }
         }
     }
+    //now insert all down and up edges
     return 0;
 }
