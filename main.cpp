@@ -4,7 +4,9 @@
 using namespace std;
 class Edge;
 class Vertex;
+class AssignmentInterval{
 
+};
 class Edge{
     Vertex * input;
     Vertex * output;
@@ -24,6 +26,7 @@ class Vertex{
     int startPos;
     int endPos;
     int floor;
+    int numInFloor;
     vector<Edge *> edges;
     int id;
 public:
@@ -33,7 +36,19 @@ public:
     vector<Edge*> getEdges(){
         return edges;
     }
-    Vertex(int id, int startPos, int endPos, int floor){
+    int getNumInFloor(){
+        return numInFloor;
+    }
+    int getFloor(){
+        return floor;
+    }
+    int getStartPos(){
+        return startPos;
+    }
+    int getEndPos(){
+        return endPos;
+    }
+    Vertex(int id, int numInFloor, int startPos, int endPos, int floor){
         this->id = id;
         this->startPos = startPos;
         this->endPos = endPos;
@@ -78,7 +93,7 @@ int main() {
             }else{
                 endPos = stoi(args[j+1]) - 2;
             }
-            Vertex * v = new Vertex(i * j + j, startPos, endPos, i);
+            Vertex * v = new Vertex(i * j + j, j, startPos, endPos, i);
             vertices.push_back(v);
             if(j != holesCount){
                 Edge * e = new Edge(1);
@@ -94,5 +109,6 @@ int main() {
         }
     }
     //now insert all down and up edges
+    cout<<n;
     return 0;
 }
