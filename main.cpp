@@ -148,6 +148,17 @@ int main() {
         intervalMapList.push_back(intervalMap);
     }
     //now insert all down and up outputEdges//
-
+    for(int i = 0; i < floors.size() - 1; i ++){//we request from up to down. Thats why we cant iterate over the last as theres no down!
+        vector<Vertex *> floor = floors.at(i);
+        for(int j = 0; j < floor.size() - 1; j ++){//do not include the last one. Theres no hole in the end
+            Vertex * currLeverPrevVertex = floor.at(j);
+            int holePos = currLeverPrevVertex->getEndPos() + 1;
+            Vertex * underVertex = intervalMapList.at(i + 1)->getValue(holePos);
+            Edge * e = new Edge( 0);
+            e->setInputVertex(currLeverPrevVertex);
+            e->setOutputVertex(underVertex);
+            currLeverPrevVertex->addOutputEdge(e);
+        }
+    }
     return 0;
 }
