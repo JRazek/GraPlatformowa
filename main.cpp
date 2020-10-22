@@ -63,14 +63,14 @@ class Vertex{
     int endPos;
     int floor;
     int numInFloor;
-    vector<Edge *> edges;
-    int id;
+    vector<Edge *> outputEdges;
+    int idInFloor;
 public:
-    void addEdge(Edge * e){
-        this->edges.push_back(e);
+    void addOutputEdge(Edge * e){
+        this->outputEdges.push_back(e);
     }
     vector<Edge*> getEdges(){
-        return edges;
+        return outputEdges;
     }
     int getNumInFloor(){
         return numInFloor;
@@ -84,8 +84,8 @@ public:
     int getEndPos(){
         return endPos;
     }
-    Vertex(int id, int numInFloor, int startPos, int endPos, int floor){
-        this->id = id;
+    Vertex(int idInFloor, int numInFloor, int startPos, int endPos, int floor){
+        this->idInFloor = idInFloor;
         this->startPos = startPos;
         this->endPos = endPos;
         this->floor = floor;
@@ -114,13 +114,14 @@ int main() {
     int length = stoi(args[1]);
     int requestsCount = stoi(args[2]);
 
-    vector<Vertex *> vertices;
+    vector<vector<Vertex *>> floors;
     vector<IntervalMap<Vertex * >*> intervalMapList;
     for(int i = 0; i < platforms; i ++){
         getline(cin, line);
         args = split(line, ' ');
         int holesCount = stoi(args[0]);
         int startPos = 0;
+        floors.push_back(vector<Vertex *>());
         IntervalMap<Vertex * > * intervalMap = new IntervalMap<Vertex * >(length - 1);
         for(int j = 0; j < holesCount + 1; j++){//because there are n+1 platforms per level
             int endPos;
@@ -129,25 +130,24 @@ int main() {
             }else{
                 endPos = stoi(args[j+1]) - 2;
             }
-            Vertex * v = new Vertex(i * j + j, j, startPos, endPos, i);
-            vertices.push_back(v);
+            Vertex * v = new Vertex(j, j, startPos, endPos, i);
+            floors.at(i).push_back(v);
             intervalMap->addValue(startPos, v);
             if(j != holesCount){
                 Edge * e = new Edge(1);
                 e->setInputVertex(v);
-                v->addEdge(e);
+                v->addOutputEdge(e);
                 startPos = stoi(args[j + 1]);
                 intervalMap->addValue(endPos + 1, nullptr);
             }
             if(j != 0){
-                Edge * prevEdge = vertices.at(j * i + j - 1)->getEdges().at(0); //there must be only one edge!
-                v->addEdge(prevEdge);
+                Edge * prevEdge = floors.at(i).at(j - 1)->getEdges().at(0); //there must be only one edge!
                 prevEdge->setOutputVertex(v);
             }
         }
         intervalMapList.push_back(intervalMap);
     }
-    //now insert all down and up edges//
+    //now insert all down and up outputEdges//
 
     return 0;
 }
