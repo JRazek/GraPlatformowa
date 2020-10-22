@@ -23,22 +23,23 @@ public:
     }
     T getValue(int key){
         int currStart = 0;
-        int currEnd = values.size() - 1;//virtual vector so we dont have to assign it over and over in O(n)
+        int currEnd = values.size();//virtual interval
         if(!(key >= 0 && key <= endValue))
             return nullptr;
         while(true){
             int pointer = (currEnd - currStart)/2 + currStart;
             int startingIntervalValueAtPointer = intervals.at(pointer);
 
-            if (currStart >= currEnd || startingIntervalValueAtPointer == key){
+            if (currStart == currEnd - 1 || startingIntervalValueAtPointer == key){
                 return values.at(pointer);
             }
 
             if(startingIntervalValueAtPointer > key){
-                currEnd = pointer - 1;
+                currEnd = pointer;
             } else if(startingIntervalValueAtPointer < key){
-                currStart = pointer + 1;
+                currStart = pointer;
             }
+
 
         }
     }
@@ -167,9 +168,8 @@ int main() {
 
             downToUp->setInputVertex(underVertex);
             downToUp->setOutputVertex(currLevelNextVertex);
-            //underVertex->addOutputEdge(downToUp);
+            underVertex->addOutputEdge(downToUp);
         }
     }
-    Vertex * underVertex = intervalMapList.at(1)->getValue(7);
     return 0;
 }
