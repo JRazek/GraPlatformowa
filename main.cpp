@@ -151,14 +151,25 @@ int main() {
     for(int i = 0; i < floors.size() - 1; i ++){//we request from up to down. Thats why we cant iterate over the last as theres no down!
         vector<Vertex *> floor = floors.at(i);
         for(int j = 0; j < floor.size() - 1; j ++){//do not include the last one. Theres no hole in the end
-            Vertex * currLeverPrevVertex = floor.at(j);
-            int holePos = currLeverPrevVertex->getEndPos() + 1;
+            Vertex * currLevelPrevVertex = floor.at(j);
+            Vertex * currLevelNextVertex = floor.at(j + 1);
+
+            int holePos = currLevelPrevVertex->getEndPos() + 1;
+
             Vertex * underVertex = intervalMapList.at(i + 1)->getValue(holePos);
-            Edge * e = new Edge( 0);
-            e->setInputVertex(currLeverPrevVertex);
-            e->setOutputVertex(underVertex);
-            currLeverPrevVertex->addOutputEdge(e);
+
+            Edge * upToDown = new Edge(0);
+            Edge * downToUp = new Edge(1);
+
+            upToDown->setInputVertex(currLevelPrevVertex);
+            upToDown->setOutputVertex(underVertex);
+            currLevelPrevVertex->addOutputEdge(upToDown);
+
+            downToUp->setInputVertex(underVertex);
+            downToUp->setOutputVertex(currLevelNextVertex);
+            //underVertex->addOutputEdge(downToUp);
         }
     }
+    Vertex * underVertex = intervalMapList.at(1)->getValue(7);
     return 0;
 }
