@@ -39,8 +39,6 @@ public:
             } else if(startingIntervalValueAtPointer < key){
                 currStart = pointer;
             }
-
-
         }
     }
 };
@@ -55,8 +53,14 @@ public:
     void setInputVertex(Vertex * v){
         this->input = v;
     }
+    Vertex * getOutputVertex(){
+        return output;
+    }
     void setOutputVertex(Vertex * v){
         this->output = v;
+    }
+    int getValue(){
+        return value;
     }
 };
 class Vertex{
@@ -65,13 +69,27 @@ class Vertex{
     int floor;
     int numInFloor;
     vector<Edge *> outputEdges;
+    vector<Edge *> inputEdges;
     int idInFloor;
+
+    bool isShortestSet = false;
+    int shortestPath;
 public:
     void addOutputEdge(Edge * e){
         this->outputEdges.push_back(e);
     }
-    vector<Edge*> getEdges(){
+    void addInputEdge(Edge * e){
+        this->inputEdges.push_back(e);
+    }
+
+    vector<Edge*> getInputEdges(){
+        return inputEdges;
+    }
+    vector<Edge*> getOutputEdges(){
         return outputEdges;
+    }
+    int getShortestPath(){
+        return shortestPath;
     }
     int getNumInFloor(){
         return numInFloor;
@@ -84,6 +102,13 @@ public:
     }
     int getEndPos(){
         return endPos;
+    }
+    bool isShortestPathSet(){
+        return isShortestSet;
+    }
+    void setShortestPath(int pathSize){
+        this->isShortestSet = true;
+        this->shortestPath = pathSize;
     }
     Vertex(int idInFloor, int numInFloor, int startPos, int endPos, int floor){
         this->idInFloor = idInFloor;
@@ -106,8 +131,27 @@ vector<string> split(string str, char divider){
     }
     return result;
 }
-
+int findShortestPath(Vertex * v, int endPointX){
+    if(v->isShortestPathSet())
+        return v->getShortestPath();
+    vector<int> paths;
+    if(v->getEndPos() == endPointX)
+        return 0;
+    for(int i = 0; i < v->getOutputEdges().size(); i ++){
+        Edge * outputEdge = v->getOutputEdges().at(i);
+        paths.push_back(findShortestPath(outputEdge->getOutputVertex(), endPointX) + outputEdge->getValue());
+    }
+    int minPath = paths.at(0);
+    for(int i = 0; i < paths.size(); i ++){
+        if(paths.at(i) < minPath)
+            minPath = paths.at(i);
+    }
+    v->setShortestPath(minPath);
+    return minPath;
+}
 int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(NULL);
     string line;
     getline(cin, line);
     vector<string> args = split(line, ' ');
@@ -142,7 +186,7 @@ int main() {
                 intervalMap->addValue(endPos + 1, nullptr);
             }
             if(j != 0){
-                Edge * prevEdge = floors.at(i).at(j - 1)->getEdges().at(0); //there must be only one edge!
+                Edge * prevEdge = floors.at(i).at(j - 1)->getOutputEdges().at(0); //there must be only one edge!
                 prevEdge->setOutputVertex(v);
             }
         }
@@ -170,6 +214,13 @@ int main() {
             downToUp->setOutputVertex(currLevelNextVertex);
             underVertex->addOutputEdge(downToUp);
         }
+    }
+    for(int i = 0; i < requestsCount; i ++){
+        getline(cin, line);
+        int startFloor = stoi(split(line, ' ')[0]) - 1;
+        Vertex * startingVertex = floors.at(startFloor).at(0);
+        int shortest = findShortestPath(startingVertex, length - 1);
+        cout<<shortest<<endl;
     }
     return 0;
 }
