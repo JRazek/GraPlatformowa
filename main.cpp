@@ -147,7 +147,7 @@ int main() {
         }
         intervalMapList.push_back(intervalMap);
     }
-    //now insert all down and up edges
-    Vertex * v = intervalMapList.at(1)->getValue(8);
+    //now insert all down and up edges//
+
     return 0;
 }
