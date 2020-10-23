@@ -67,7 +67,6 @@ class Vertex{
     int startPos;
     int endPos;
     int floor;
-    int numInFloor;
     vector<Edge *> outputEdges;
     vector<Edge *> inputEdges;
     int idInFloor;
@@ -82,17 +81,14 @@ public:
         this->inputEdges.push_back(e);
     }
 
-    vector<Edge*> getInputEdges(){
+    const vector<Edge*> &getInputEdges(){
         return inputEdges;
     }
-    vector<Edge*> getOutputEdges(){
+    const vector<Edge*> &getOutputEdges(){
         return outputEdges;
     }
     int getShortestPath(){
         return shortestPath;
-    }
-    int getNumInFloor(){
-        return numInFloor;
     }
     int getFloor(){
         return floor;
@@ -110,7 +106,7 @@ public:
         this->isShortestSet = true;
         this->shortestPath = pathSize;
     }
-    Vertex(int idInFloor, int numInFloor, int startPos, int endPos, int floor){
+    Vertex(int idInFloor, int startPos, int endPos, int floor){
         this->idInFloor = idInFloor;
         this->startPos = startPos;
         this->endPos = endPos;
@@ -175,7 +171,7 @@ int main() {
             }else{
                 endPos = stoi(args[j+1]) - 2;
             }
-            Vertex * v = new Vertex(j, j, startPos, endPos, i);
+            Vertex * v = new Vertex(j, startPos, endPos, i);
             floors.at(i).push_back(v);
             intervalMap->addValue(startPos, v);
             if(j != holesCount){
@@ -195,24 +191,26 @@ int main() {
     //now insert all down and up outputEdges//
     for(int i = 0; i < floors.size() - 1; i ++){//we request from up to down. Thats why we cant iterate over the last as theres no down!
         vector<Vertex *> floor = floors.at(i);
-        for(int j = 0; j < floor.size() - 1; j ++){//do not include the last one. Theres no hole in the end
-            Vertex * currLevelPrevVertex = floor.at(j);
-            Vertex * currLevelNextVertex = floor.at(j + 1);
-
-            int holePos = currLevelPrevVertex->getEndPos() + 1;
-
-            Vertex * underVertex = intervalMapList.at(i + 1)->getValue(holePos);
-
-            Edge * upToDown = new Edge(0);
-            Edge * downToUp = new Edge(1);
-
-            upToDown->setInputVertex(currLevelPrevVertex);
-            upToDown->setOutputVertex(underVertex);
-            currLevelPrevVertex->addOutputEdge(upToDown);
-
-            downToUp->setInputVertex(underVertex);
-            downToUp->setOutputVertex(currLevelNextVertex);
-            underVertex->addOutputEdge(downToUp);
+        for(int j = 0; j < floor.size(); j ++){//do not include the last one. Theres no hole in the end
+            Vertex * consideredVertex = floor.at(j);
+            if(j != floor.size() - 1) {
+                int holeAfterConsideredPos = consideredVertex->getEndPos() + 1;
+                Vertex * vertexUnderHole = intervalMapList.at(i + 1)->getValue(holeAfterConsideredPos);
+                Edge * upToDown = new Edge(0);
+                upToDown->setInputVertex(consideredVertex);
+                upToDown->setOutputVertex(vertexUnderHole);
+                consideredVertex->addOutputEdge(upToDown);
+                vertexUnderHole->addInputEdge(upToDown);
+            }
+            if(j != 0){
+                int holeBeforeConsideredPos = consideredVertex->getStartPos() - 1;
+                Vertex * vertexUnderHole = intervalMapList.at(i + 1)->getValue(holeBeforeConsideredPos);
+                Edge * downToUp = new Edge(1);
+                downToUp->setInputVertex(vertexUnderHole);
+                downToUp->setOutputVertex(consideredVertex);
+                vertexUnderHole->addOutputEdge(downToUp);
+                consideredVertex->addInputEdge(downToUp);
+            }
         }
     }
     for(int i = 0; i < requestsCount; i ++){
@@ -220,7 +218,7 @@ int main() {
         int startFloor = stoi(split(line, ' ')[0]) - 1;
         Vertex * startingVertex = floors.at(startFloor).at(0);
         int shortest = findShortestPath(startingVertex, length - 1);
-        cout<<shortest<<endl;
+        cout<<shortest<<"\n";
     }
     return 0;
 }
