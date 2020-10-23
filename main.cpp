@@ -143,7 +143,7 @@ int findShortestPath(Vertex * v, int endPointX){
             minPath = paths->at(i);
     }
     v->setShortestPath(minPath);
-    free(paths);
+    delete(paths);
     return minPath;
 }
 int main() {
