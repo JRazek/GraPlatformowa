@@ -130,19 +130,20 @@ vector<string> split(string str, char divider){
 int findShortestPath(Vertex * v, int endPointX){
     if(v->isShortestPathSet())
         return v->getShortestPath();
-    vector<int> paths;
+    vector<int> * paths = new vector<int>;
     if(v->getEndPos() == endPointX)
         return 0;
     for(int i = 0; i < v->getOutputEdges().size(); i ++){
         Edge * outputEdge = v->getOutputEdges().at(i);
-        paths.push_back(findShortestPath(outputEdge->getOutputVertex(), endPointX) + outputEdge->getValue());
+        paths->push_back(findShortestPath(outputEdge->getOutputVertex(), endPointX) + outputEdge->getValue());
     }
-    int minPath = paths.at(0);
-    for(int i = 0; i < paths.size(); i ++){
-        if(paths.at(i) < minPath)
-            minPath = paths.at(i);
+    int minPath = paths->at(0);
+    for(int i = 0; i < paths->size(); i ++){
+        if(paths->at(i) < minPath)
+            minPath = paths->at(i);
     }
     v->setShortestPath(minPath);
+    free(paths);
     return minPath;
 }
 int main() {
