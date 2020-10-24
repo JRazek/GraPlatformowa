@@ -182,8 +182,10 @@ int main() {
                 intervalMap->addValue(endPos + 1, nullptr);
             }
             if(j != 0){
-                Edge * prevEdge = floors.at(i).at(j - 1)->getOutputEdges().at(0); //there must be only one edge!
+                Vertex * prevV = floors.at(i).at(j - 1);
+                Edge * prevEdge = prevV->getOutputEdges().at(0); //there must be only one edge!
                 prevEdge->setOutputVertex(v);
+                v->addInputEdge(prevEdge);
             }
         }
         intervalMapList.push_back(intervalMap);
@@ -237,8 +239,9 @@ int main() {
             int startFloor = stoi(split(line, ' ')[0]) - 1;
             Vertex * startingVertex = floors.at(startFloor).at(0);
             int givenAnswer =  startingVertex->getShortestPath();
-            if(correctAnswer != givenAnswer)
+            if(correctAnswer != givenAnswer) {
                 wrong++;
+            }
         }
     }
     cout<<wrong;
