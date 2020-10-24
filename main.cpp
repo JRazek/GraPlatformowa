@@ -226,24 +226,13 @@ int main() {
     }
 
 
-    int wrong = 0;
     findShortestPath(final);
-    fstream answers("/home/user/CLionProjects/GraPlatformowa/tests/answers");
-    if(answers.good()) {
-        string l;
-        for (int i = 0; i < requestsCount; i++) {
-            getline(answers, l);
-            int correctAnswer = stoi(l);
-
-            getline(cin, line);
-            int startFloor = stoi(split(line, ' ')[0]) - 1;
-            Vertex * startingVertex = floors.at(startFloor).at(0);
-            int givenAnswer =  startingVertex->getShortestPath();
-            if(correctAnswer != givenAnswer) {
-                wrong++;
-            }
-        }
+    for (int i = 0; i < requestsCount; i++) {
+        getline(cin, line);
+        int startFloor = stoi(split(line, ' ')[0]) - 1;
+        Vertex * startingVertex = floors.at(startFloor).at(0);
+        int givenAnswer =  startingVertex->getShortestPath();
+        cout<<givenAnswer<<"\n";
     }
-    cout<<wrong;
     return 0;
 }
