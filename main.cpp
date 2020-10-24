@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include <stack>
 #include <map>
 #include <vector>
 using namespace std;
@@ -56,6 +57,9 @@ public:
     Vertex * getOutputVertex(){
         return output;
     }
+    Vertex * getInputVertex(){
+        return input;
+    }
     void setOutputVertex(Vertex * v){
         this->output = v;
     }
@@ -71,8 +75,7 @@ class Vertex{
     vector<Edge *> inputEdges;
     int idInFloor;
 
-    bool isShortestSet = false;
-    int shortestPath;
+    int shortestPath = 2147483647;
 public:
     void addOutputEdge(Edge * e){
         this->outputEdges.push_back(e);
@@ -99,11 +102,7 @@ public:
     int getEndPos(){
         return endPos;
     }
-    bool isShortestPathSet(){
-        return isShortestSet;
-    }
     void setShortestPath(int pathSize){
-        this->isShortestSet = true;
         this->shortestPath = pathSize;
     }
     Vertex(int idInFloor, int startPos, int endPos, int floor){
@@ -127,24 +126,22 @@ vector<string> split(string str, char divider){
     }
     return result;
 }
-int findShortestPath(Vertex * v, int endPointX){
-    if(v->isShortestPathSet())
-        return v->getShortestPath();
-    vector<int> * paths = new vector<int>;
-    if(v->getEndPos() == endPointX)
-        return 0;
-    for(int i = 0; i < v->getOutputEdges().size(); i ++){
-        Edge * outputEdge = v->getOutputEdges().at(i);
-        paths->push_back(findShortestPath(outputEdge->getOutputVertex(), endPointX) + outputEdge->getValue());
+void findShortestPath(Vertex * v){
+    stack<Vertex *> queue;
+    v->setShortestPath(0);
+    queue.push(v);
+    while(!queue.empty()){
+        Vertex * next = queue.top();
+        queue.pop();
+        for(int i = 0; i < next->getInputEdges().size(); i ++){
+            Edge * e = next->getInputEdges().at(i);
+            Vertex * neighbour = e->getInputVertex();
+            if(next->getShortestPath() + e->getValue() < neighbour->getShortestPath()){
+                neighbour->setShortestPath(next->getShortestPath() + e->getValue());
+                queue.push(neighbour);
+            }
+        }
     }
-    int minPath = paths->at(0);
-    for(int i = 0; i < paths->size(); i ++){
-        if(paths->at(i) < minPath)
-            minPath = paths->at(i);
-    }
-    v->setShortestPath(minPath);
-    delete(paths);
-    return minPath;
 }
 int main() {
     std::ios_base::sync_with_stdio(false);
@@ -214,12 +211,22 @@ int main() {
             }
         }
     }
+    Vertex * final = new Vertex(-1,length,length,-1);
+    for(int i = 0; i < floors.size(); i ++){
+        Vertex * v = floors.at(i).at(floors.at(i).size() - 1);
+        Edge * e = new Edge(0);
+        e->setInputVertex(v);
+        e->setOutputVertex(final);
+        v->addOutputEdge(e);
+        final->addInputEdge(e);
+    }
+
+    findShortestPath(final);
     for(int i = 0; i < requestsCount; i ++){
         getline(cin, line);
         int startFloor = stoi(split(line, ' ')[0]) - 1;
         Vertex * startingVertex = floors.at(startFloor).at(0);
-        int shortest = findShortestPath(startingVertex, length - 1);
-        cout<<shortest<<"\n";
+        cout<<startingVertex->getShortestPath()<<"\n";
     }
     return 0;
 }
