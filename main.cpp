@@ -234,6 +234,6 @@ int main() {
         int givenAnswer =  startingVertex->getShortestPath();
         cout<<givenAnswer<<"\n";
     }
-    //maly fix - licz poki nie znajdziesz docelowego i wyjebane!
+    //maly fix - licz poki nie znajdziesz docelowego i wyjebane!.
     return 0;
 }
