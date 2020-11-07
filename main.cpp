@@ -50,6 +50,7 @@ vector<Vertex*> topologicalSort(vector<vector<Vertex*>> &floors){
     return order;
 }
 void findShortestPaths(const vector<Vertex *> &vertices){
+    return;
     vertices[0]->shortestPath = 0;
     for(auto v : vertices){
         for(auto e : v->inputEdges){
@@ -117,7 +118,9 @@ int main() {
     int requestsCount = stoi(args[2]);
 
     vector<vector<Vertex* >> floors;
-    vector<IntervalMap<Vertex> > intervals;
+    vector<Vertex *> floorStartingVertices;
+
+    vector<IntervalMap<Vertex>* > intervals;
     vector<Edge *> edges;
 
     int currID = 0;
@@ -129,7 +132,7 @@ int main() {
         args = split(line, ' ');
         int holesCount = stoi(args[0]);
 
-        IntervalMap<Vertex> interval;
+        IntervalMap<Vertex> * interval = new IntervalMap<Vertex>();
         vector<Vertex *> floor;
         for(int j = 0; j < holesCount + 1; j++){
             if(j == 0 && j != holesCount){
@@ -144,8 +147,11 @@ int main() {
 
             Vertex * v = new Vertex(currID, j, r);
             currID ++;
-            interval.pushBack(r, v);
+            interval->pushBack(r, v);
             floor.push_back(v);
+            if(j == 0){
+                floorStartingVertices.push_back(v);
+            }
         }
         floors.push_back(floor);
         intervals.push_back(interval);
@@ -155,7 +161,7 @@ int main() {
         for(int j = 0; j < floors[i].size() - 1; j ++){
 
             Vertex * subjectVertex = floors[i][j];
-            Vertex * nextVertex = intervals[i].getObject(subjectVertex->rangeInPlatform->max + 2);
+            Vertex * nextVertex = intervals[i]->getObject(subjectVertex->rangeInPlatform->max + 2);
 
             Edge * sameLevel = new Edge(subjectVertex, nextVertex, true);
             edges.push_back(sameLevel);
@@ -163,7 +169,7 @@ int main() {
             nextVertex->inputEdges.push_back(sameLevel);
 
             if( i > floors.size() - 1 ){
-                Vertex * underVertex = intervals[i + 1].getObject(subjectVertex->rangeInPlatform->max + 1);
+                Vertex * underVertex = intervals[i + 1]->getObject(subjectVertex->rangeInPlatform->max + 1);
                 Edge * downToUp = new Edge(underVertex, nextVertex, true);
                 edges.push_back(downToUp);
                 underVertex->outputEdges.push_back(downToUp);
@@ -178,12 +184,29 @@ int main() {
         }
     }
 
-    delete r;
+    for(auto i : intervals){
+        delete i;
+    }
+
+    vector<Vertex *> ordered = topologicalSort(floors);
+    findShortestPaths(ordered);
+
+
+    for(int i = 0; i < requestsCount; i ++){
+        getline(cin, line);
+        args = split(line, ' ');
+        int platformCount = stoi(args[0]) - 1;
+        cout<<floorStartingVertices[platformCount]->shortestPath<<"\n";
+    }
     for(auto v : floors){
         for(auto f : v){
             delete f;
         }
     }
+    for(auto v : ordered){
+        delete v;
+    }
+    delete r;
     for(auto e : edges){
         delete e;
     }
