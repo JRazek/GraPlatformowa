@@ -17,60 +17,39 @@ struct Range{
     }
 };
 struct Vertex{
-    vector<shared_ptr<Edge>> inputEdges;
-    vector<shared_ptr<Edge>> outputEdges;
+    vector<Edge *> inputEdges;
+    vector<Edge *> outputEdges;
     int id;
     int numInFloor;
-    int shortestPath = 2147483647;
+    int shortestPath = 2147483600;
     bool visited = false;
-    unique_ptr<Range> rangeInPlatform;
-    Vertex(int id, int numInFloor, Range r){
+    Range * rangeInPlatform;
+    Vertex(int id, int numInFloor, Range * r){
         this->id = id;
         this->numInFloor = numInFloor;
-        rangeInPlatform = make_unique<Range>(r.min, r.max);
+        rangeInPlatform = new Range(r->min, r->max);
     }
     ~Vertex(){
-        cout<<"goodbye!";
+        delete rangeInPlatform;
     }
 };
 struct Edge{
-    shared_ptr<Vertex> input;
-    shared_ptr<Vertex> output;
-    Edge(shared_ptr<Vertex> i, shared_ptr<Vertex> o, bool w){
+    Vertex * input;
+    Vertex * output;
+    bool weight;
+    Edge(Vertex * i, Vertex * o, bool w){
         this->input = i;
         this->output = o;
         this->weight = w;
     }
-    bool weight;
-};
-vector<shared_ptr<Vertex>> topologicalSort(const vector<vector<shared_ptr<Vertex>>> &floors){
-    vector<shared_ptr<Vertex>> order;
 
-    int floorNum = 0;
-    while(floorNum != floors.size() - 1){
-        stack<shared_ptr<Vertex>> queue;
-        queue.push(floors[floorNum][0]);
-        while (!queue.empty()){
-            shared_ptr<Vertex> v = queue.top();
-            v->visited = true;
-            int i = 0;
-            for(auto e : v->outputEdges){
-                if(!e->output->visited){
-                    queue.push(e->output);
-                    i++;
-                }
-            }
-            if(i == 0){
-                order.push_back(v);
-                queue.pop();
-                continue;
-            }
-        }
-        floorNum++;
-    }
+};
+vector<Vertex*> topologicalSort(vector<vector<Vertex*>> &floors){
+    vector<Vertex*> order;
+
     return order;
 }
-void findShortestPaths(vector<shared_ptr<Vertex>> &vertices){
+void findShortestPaths(const vector<Vertex *> &vertices){
     vertices[0]->shortestPath = 0;
     for(auto v : vertices){
         for(auto e : v->inputEdges){
@@ -82,11 +61,11 @@ void findShortestPaths(vector<shared_ptr<Vertex>> &vertices){
 }
 template <typename T>
 struct IntervalMap{
-    vector<pair<Range, shared_ptr<T> >> interval;
-    void pushBack(Range r, shared_ptr<T> o){
-        interval.push_back(make_pair(Range(r.min, r.max), o));
+    vector<pair<Range, T* >> interval;
+    void pushBack(Range * r, T* o){
+        interval.push_back(make_pair(Range(r->min, r->max), o));
     }
-    shared_ptr<T> getObject(const int point){
+    T* getObject(const int point){
         int min = 0;
         int max = interval.size();
 
@@ -104,6 +83,12 @@ struct IntervalMap{
             if(point < r.min){
                 max = pointer;
             }
+        }
+    }
+    ~IntervalMap(){
+        interval.clear();
+        for(auto p : interval){
+            delete p.second;
         }
     }
 };
@@ -131,30 +116,33 @@ int main() {
     int maxX = stoi(args[1]) - 1;
     int requestsCount = stoi(args[2]);
 
-    vector<vector<shared_ptr<Vertex> >> floors;
+    vector<vector<Vertex* >> floors;
     vector<IntervalMap<Vertex> > intervals;
+    vector<Edge *> edges;
 
     int currID = 0;
+    Range * r = new Range(0,0);
     for(int i = 0; i < platformsCount; i++){
-        Range r(0, 0);
+        r->min = 0;
+        r->max = 0;
         getline(cin, line);
         args = split(line, ' ');
         int holesCount = stoi(args[0]);
 
         IntervalMap<Vertex> interval;
-        vector<shared_ptr<Vertex>> floor;
+        vector<Vertex *> floor;
         for(int j = 0; j < holesCount + 1; j++){
             if(j == 0 && j != holesCount){
-                r.max = stoi(args[j + 1]) - 2;
+                r->max = stoi(args[j + 1]) - 2;
             }else if(j != holesCount){
-                r.min = r.max + 2;
-                r.max = stoi(args[j + 1]) - 2;;
+                r->min = r->max + 2;
+                r->max = stoi(args[j + 1]) - 2;;
             }else{
-                r.min = r.max + 2;
-                r.max = maxX;
+                r->min = r->max + 2;
+                r->max = maxX;
             }
 
-            shared_ptr<Vertex> v = make_shared<Vertex>(currID, j, r);
+            Vertex * v = new Vertex(currID, j, r);
             currID ++;
             interval.pushBack(r, v);
             floor.push_back(v);
@@ -163,44 +151,43 @@ int main() {
         intervals.push_back(interval);
     }
 
-    shared_ptr<Vertex> endingVertex = make_shared<Vertex>(-1, -1, Range(0,0));
-
     for(int i = 0; i < floors.size(); i++){
-        vector<shared_ptr<Vertex>> floor = floors[i];
-        for(int j = 0; j < floor.size() - 1; j ++){
-            shared_ptr<Vertex> vertexSubject = floor[j];
-            shared_ptr<Vertex> vertexNext = floor[j + 1];
+        for(int j = 0; j < floors[i].size() - 1; j ++){
 
-            if(i != floors.size() - 1){
-                shared_ptr<Vertex> vertexUnder = intervals[i + 1].getObject(vertexSubject->rangeInPlatform->max + 1);
-                shared_ptr<Edge> upToDown = make_shared<Edge>(vertexSubject, vertexUnder, false);
-                shared_ptr<Edge> downToUp = make_shared<Edge>(vertexUnder, vertexNext, true);
+            Vertex * subjectVertex = floors[i][j];
+            Vertex * nextVertex = intervals[i].getObject(subjectVertex->rangeInPlatform->max + 2);
 
-                vertexSubject->outputEdges.push_back(upToDown);
-                vertexUnder->inputEdges.push_back(upToDown);
+            Edge * sameLevel = new Edge(subjectVertex, nextVertex, true);
+            edges.push_back(sameLevel);
+            subjectVertex->outputEdges.push_back(sameLevel);
+            nextVertex->inputEdges.push_back(sameLevel);
 
-                vertexUnder->outputEdges.push_back(downToUp);
-                vertexNext->inputEdges.push_back(downToUp);
+            if( i > floors.size() - 1 ){
+                Vertex * underVertex = intervals[i + 1].getObject(subjectVertex->rangeInPlatform->max + 1);
+                Edge * downToUp = new Edge(underVertex, nextVertex, true);
+                edges.push_back(downToUp);
+                underVertex->outputEdges.push_back(downToUp);
+                nextVertex->inputEdges.push_back(downToUp);
+
+                Edge * upToDown = new Edge(subjectVertex, underVertex, false);
+                edges.push_back(upToDown);
+                subjectVertex->outputEdges.push_back(upToDown);
+                underVertex->inputEdges.push_back(upToDown);
             }
 
-            shared_ptr<Edge> edge = make_shared<Edge>(vertexSubject, vertexNext, true);
-            vertexSubject->outputEdges.push_back(edge);
-            vertexNext->inputEdges.push_back(edge);
         }
-        shared_ptr<Vertex> e = floor.back();
-        shared_ptr<Edge> endingEdge = make_shared<Edge>(e, endingVertex, false);
-        e->outputEdges.push_back(endingEdge);
-        endingVertex->inputEdges.push_back(endingEdge);
-    }
-    vector<shared_ptr<Vertex>> sortedVertices = topologicalSort(floors);
-
-    findShortestPaths(sortedVertices);
-    for(int i = 0; i < requestsCount; i ++){
-        getline(cin, line);
-        args = split(line, ' ');
-        int floorID = stoi(args[0]) - 1;
-        cout<<floors[floorID][0]->shortestPath<<"\n";
     }
 
+    delete r;
+    for(auto v : floors){
+        for(auto f : v){
+            delete f;
+        }
+    }
+    for(auto e : edges){
+        delete e;
+    }
+
+    cout<<"";
     return 0;
 }
