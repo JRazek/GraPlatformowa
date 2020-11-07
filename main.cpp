@@ -30,7 +30,7 @@ struct Vertex{
 
     }
 };
-vector<Vertex*> topologicalSort(vector<vector<Vertex*>> &floors){
+vector<Vertex*> topologicalSort(vector<Vertex *> &floorsStarting, vector<Vertex *> &vertices){
     vector<Vertex*> order;
 
     return order;
@@ -96,6 +96,9 @@ int main() {
 
     vector<vector<Vertex* >> floors;
 
+    vector<Vertex*> vertices;
+    vector<Vertex*> floorStartingVertex;
+
     int currID = 0;
     Range * r = new Range(0,0);
 
@@ -123,6 +126,7 @@ int main() {
 
             Vertex * v = new Vertex(currID, j, r);
             currID ++;
+            vertices.push_back(v);
             interval->pushBack(r, v);
             floor.push_back(v);
         }
@@ -146,32 +150,38 @@ int main() {
         }
         delete interval;
         floors.push_back(floor);
-
+        floorStartingVertex.push_back(floors[i][0]);
+        finalVertex->edges.emplace_back(floors[i][floors[i].size() - 1]->id, false);
         if(i == platformsCount - 1){
             for(auto n : floors[i]){
                 delete n->rangeInPlatform;
             }
         }
     }
+    floors.clear();
 
-    for(auto v : floors){
-        for(auto f : v){
-            delete f;
-        }
-    }
-    delete finalVertex->rangeInPlatform;
-    delete finalVertex;
-   // findShortestPaths(ordered);
+    vector<Vertex *> ordered = topologicalSort(floorStartingVertex, vertices);
+    // findShortestPaths(ordered);
 
-  /*  for(auto v : ordered){
+    for(auto v : vertices){
         delete v;
-    }*/
-    delete r;
+        //put that in topologicalSort function and delete as soon as you put in the order vector
+    }
 
     for(int i = 0; i < requestsCount; i ++){
         getline(cin, line);
         args = split(line, ' ');
     }
+
+
+
+
+    delete finalVertex->rangeInPlatform;
+    delete finalVertex;
+
+
+    delete r;
+
 
 
     cout<<"";
