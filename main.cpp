@@ -1,30 +1,12 @@
 #include <iostream>
-
+#include <math.h>
 #include <memory>
-#include <stack>
 #include <map>
 #include <vector>
-#include <memory>
-#include <fstream>
 
 using namespace std;
 struct Vertex;
 struct Edge;
-struct Vertex{
-    vector<shared_ptr<Edge>> edges;
-    int id;
-    int numInFloor;
-    Vertex(int id, int numInFloor){
-        this->id = id;
-        this->numInFloor = numInFloor;
-    }
-};
-struct Edge{
-    shared_ptr<Edge> input;
-    shared_ptr<Edge> output;
-
-};
-
 struct Range{
     int min;
     int max;
@@ -33,6 +15,33 @@ struct Range{
         this->max = max;
     }
 };
+struct Vertex{
+    vector<shared_ptr<Edge>> inputEdges;
+    vector<shared_ptr<Edge>> outputEdges;
+    int id;
+    int numInFloor;
+    int shortestPath = 2147483647;
+    unique_ptr<Range> rangeInPlatform;
+    Vertex(int id, int numInFloor, Range r){
+        this->id = id;
+        this->numInFloor = numInFloor;
+        rangeInPlatform = make_unique<Range>(r.min, r.max);
+    }
+    ~Vertex(){
+        cout<<"goodbye!";
+    }
+};
+struct Edge{
+    weak_ptr<Vertex> input;
+    weak_ptr<Vertex> output;
+    Edge(weak_ptr<Vertex> i, weak_ptr<Vertex> o, bool w){
+        this->input = i;
+        this->output = o;
+        this->weight = w;
+    }
+    bool weight;
+};
+
 
 template <typename T>
 struct IntervalMap{
@@ -40,7 +49,7 @@ struct IntervalMap{
     void pushBack(Range r, shared_ptr<T> o){
         interval.push_back(make_pair(Range(r.min, r.max), o));
     }
-    shared_ptr<T> getObject(int point){
+    shared_ptr<T> getObject(const int point){
         int min = 0;
         int max = interval.size();
 
@@ -88,9 +97,9 @@ int main() {
     vector<vector<shared_ptr<Vertex> >> floors;
     vector<IntervalMap<Vertex> > intervals;
 
-    Range r(0, 0);
     int currID = 0;
     for(int i = 0; i < platformsCount; i++){
+        Range r(0, 0);
         getline(cin, line);
         args = split(line, ' ');
         int holesCount = stoi(args[0]);
@@ -108,7 +117,7 @@ int main() {
                 r.max = maxX;
             }
 
-            shared_ptr<Vertex> v(new Vertex(currID, j));
+            shared_ptr<Vertex> v = make_shared<Vertex>(currID, j, r);
             currID ++;
 
             interval.pushBack(r, v);
@@ -117,7 +126,30 @@ int main() {
         floors.push_back(floor);
         intervals.push_back(interval);
     }
-    shared_ptr<Vertex> v = intervals[0].getObject(5);
+
+    for(int i = 0; i < floors.size(); i++){
+        vector<shared_ptr<Vertex>> floor = floors[i];
+        for(int j = 0; j < floor.size() - 1; j ++){
+            shared_ptr<Vertex> vertexSubject = floor[j];
+            shared_ptr<Vertex> vertexNext = floor[j + 1];
+
+            if(i != floors.size() - 1){
+                shared_ptr<Vertex> vertexUnder = intervals[i + 1].getObject(vertexSubject->rangeInPlatform->max + 1);
+                shared_ptr<Edge> upToDown = make_shared<Edge>(vertexSubject, vertexUnder, false);
+                shared_ptr<Edge> downToUp = make_shared<Edge>(vertexUnder, vertexNext, true);
+
+                vertexSubject->outputEdges.push_back(upToDown);
+                vertexUnder->inputEdges.push_back(upToDown);
+
+                vertexUnder->outputEdges.push_back(downToUp);
+                vertexNext->inputEdges.push_back(downToUp);
+            }
+
+            shared_ptr<Edge> edge = make_shared<Edge>(vertexSubject, vertexNext, true);
+            vertexSubject->outputEdges.push_back(edge);
+            vertexNext->inputEdges.push_back(edge);
+        }
+    }
 
     return 0;
 }
