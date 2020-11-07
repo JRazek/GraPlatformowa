@@ -19,17 +19,15 @@ struct Range{
 struct Vertex{
     vector<pair<int, bool>> edges;//the outputVertices looking from final vertex to the startpoint
     int id;
-    int numInFloor;
     int shortestPath = 2147483600;
     bool visited = false;
     Range * rangeInPlatform;
     Vertex(int id, int numInFloor, Range * r){
         this->id = id;
-        this->numInFloor = numInFloor;
         rangeInPlatform = new Range(r->min, r->max);
     }
     ~Vertex(){
-        delete rangeInPlatform;
+
     }
 };
 vector<Vertex*> topologicalSort(vector<vector<Vertex*>> &floors){
@@ -132,32 +130,43 @@ int main() {
         if( i > 0 ){
             for(int j = 0; j < floors[i - 1].size() - 1; j ++){
                 Vertex * subjectVertex = floors[i - 1][j];//from 0 to platformsCount - 1;
+
                 Vertex * sameLineVertex = floors[i - 1][j + 1];
                 Vertex * underVertex = interval->getObject(subjectVertex->rangeInPlatform->max + 1);
 
                 sameLineVertex->edges.emplace_back(subjectVertex->id, true);
                 sameLineVertex->edges.emplace_back(underVertex->id, true);
                 underVertex->edges.emplace_back(subjectVertex->id, false);
+
+                delete subjectVertex->rangeInPlatform;
+                if(j == floors[i - 1].size() - 2){
+                    delete sameLineVertex->rangeInPlatform;
+                }
             }
         }
-
         delete interval;
         floors.push_back(floor);
+
+        if(i == platformsCount - 1){
+            for(auto n : floors[i]){
+                delete n->rangeInPlatform;
+            }
+        }
     }
 
     for(auto v : floors){
-        int i = 0;
         for(auto f : v){
             delete f;
         }
     }
+    delete finalVertex->rangeInPlatform;
+    delete finalVertex;
    // findShortestPaths(ordered);
 
   /*  for(auto v : ordered){
         delete v;
     }*/
     delete r;
-    delete finalVertex;
 
     for(int i = 0; i < requestsCount; i ++){
         getline(cin, line);
