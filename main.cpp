@@ -2,6 +2,7 @@
 #include <math.h>
 #include <memory>
 #include <map>
+#include <stack>
 #include <vector>
 
 using namespace std;
@@ -21,6 +22,7 @@ struct Vertex{
     int id;
     int numInFloor;
     int shortestPath = 2147483647;
+    bool visited = false;
     unique_ptr<Range> rangeInPlatform;
     Vertex(int id, int numInFloor, Range r){
         this->id = id;
@@ -32,16 +34,42 @@ struct Vertex{
     }
 };
 struct Edge{
-    weak_ptr<Vertex> input;
-    weak_ptr<Vertex> output;
-    Edge(weak_ptr<Vertex> i, weak_ptr<Vertex> o, bool w){
+    shared_ptr<Vertex> input;
+    shared_ptr<Vertex> output;
+    Edge(shared_ptr<Vertex> i, shared_ptr<Vertex> o, bool w){
         this->input = i;
         this->output = o;
         this->weight = w;
     }
     bool weight;
 };
+vector<shared_ptr<Vertex>> topologicalSort(const vector<vector<shared_ptr<Vertex>>> &floors){
+    vector<shared_ptr<Vertex>> order;
 
+    int floorNum = 0;
+    while(floorNum != floors.size() - 1){
+        stack<shared_ptr<Vertex>> queue;
+        queue.push(floors[floorNum][0]);
+        while (!queue.empty()){
+            shared_ptr<Vertex> v = queue.top();
+            v->visited = true;
+            int i = 0;
+            for(auto e : v->outputEdges){
+                if(!e->output->visited){
+                    queue.push(e->output);
+                    i++;
+                }
+            }
+            if(i == 0){
+                order.push_back(v);
+                queue.pop();
+                continue;
+            }
+        }
+        floorNum++;
+    }
+    return order;
+}
 
 template <typename T>
 struct IntervalMap{
@@ -119,13 +147,14 @@ int main() {
 
             shared_ptr<Vertex> v = make_shared<Vertex>(currID, j, r);
             currID ++;
-
             interval.pushBack(r, v);
             floor.push_back(v);
         }
         floors.push_back(floor);
         intervals.push_back(interval);
     }
+
+    shared_ptr<Vertex> endingVertex = make_shared<Vertex>(-1, -1, Range(0,0));
 
     for(int i = 0; i < floors.size(); i++){
         vector<shared_ptr<Vertex>> floor = floors[i];
@@ -149,7 +178,11 @@ int main() {
             vertexSubject->outputEdges.push_back(edge);
             vertexNext->inputEdges.push_back(edge);
         }
+        shared_ptr<Vertex> e = floor.back();
+        shared_ptr<Edge> endingEdge = make_shared<Edge>(e, endingVertex, true);
+        e->outputEdges.push_back(endingEdge);
+        endingVertex->inputEdges.push_back(endingEdge);
     }
-
+    vector<shared_ptr<Vertex>> sortedVertices = topologicalSort(floors);
     return 0;
 }
