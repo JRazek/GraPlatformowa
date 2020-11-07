@@ -70,7 +70,16 @@ vector<shared_ptr<Vertex>> topologicalSort(const vector<vector<shared_ptr<Vertex
     }
     return order;
 }
-
+void findShortestPaths(vector<shared_ptr<Vertex>> &vertices){
+    vertices[0]->shortestPath = 0;
+    for(auto v : vertices){
+        for(auto e : v->inputEdges){
+            if(v->shortestPath + e->weight < e->input->shortestPath){
+                e->input->shortestPath = v->shortestPath + e->weight;
+            }
+        }
+    }
+}
 template <typename T>
 struct IntervalMap{
     vector<pair<Range, shared_ptr<T> >> interval;
@@ -82,9 +91,9 @@ struct IntervalMap{
         int max = interval.size();
 
         ;//points to index in vector!
-
+        int pointer;
         while(true){
-            int pointer = (max - min) / 2 + min;
+            pointer = (max - min) / 2 + min;
             Range r = interval[pointer].first;
             if(r.min <= point && r.max >= point)
                 return interval[pointer].second;
@@ -135,7 +144,7 @@ int main() {
         IntervalMap<Vertex> interval;
         vector<shared_ptr<Vertex>> floor;
         for(int j = 0; j < holesCount + 1; j++){
-            if(j == 0){
+            if(j == 0 && j != holesCount){
                 r.max = stoi(args[j + 1]) - 2;
             }else if(j != holesCount){
                 r.min = r.max + 2;
@@ -179,10 +188,19 @@ int main() {
             vertexNext->inputEdges.push_back(edge);
         }
         shared_ptr<Vertex> e = floor.back();
-        shared_ptr<Edge> endingEdge = make_shared<Edge>(e, endingVertex, true);
+        shared_ptr<Edge> endingEdge = make_shared<Edge>(e, endingVertex, false);
         e->outputEdges.push_back(endingEdge);
         endingVertex->inputEdges.push_back(endingEdge);
     }
     vector<shared_ptr<Vertex>> sortedVertices = topologicalSort(floors);
+
+    findShortestPaths(sortedVertices);
+    for(int i = 0; i < requestsCount; i ++){
+        getline(cin, line);
+        args = split(line, ' ');
+        int floorID = stoi(args[0]) - 1;
+        cout<<floors[floorID][0]->shortestPath<<"\n";
+    }
+
     return 0;
 }
