@@ -62,9 +62,9 @@ void findShortestPaths(const vector<Vertex *> &vertices){
 }
 template <typename T>
 struct IntervalMap{
-    vector<pair<Range, T* >> interval;
+    vector<pair<Range *, T* >> interval;
     void pushBack(Range * r, T* o){
-        interval.push_back(make_pair(Range(r->min, r->max), o));
+        interval.push_back(make_pair(new Range(r->min, r->max), o));
     }
     T* getObject(const int point){
         int min = 0;
@@ -74,23 +74,23 @@ struct IntervalMap{
         int pointer;
         while(true){
             pointer = (max - min) / 2 + min;
-            Range r = interval[pointer].first;
-            if(r.min <= point && r.max >= point)
+            Range * r = interval[pointer].first;
+            if(r->min <= point && r->max >= point)
                 return interval[pointer].second;
 
-            if(point > r.max){
+            if(point > r->max){
                 min = pointer;
             }
-            if(point < r.min){
+            if(point < r->min){
                 max = pointer;
             }
         }
     }
     ~IntervalMap(){
-        interval.clear();
         for(auto p : interval){
-            delete p.second;
+            delete p.first;
         }
+        interval.clear();
     }
 };
 
@@ -120,11 +120,16 @@ int main() {
     vector<vector<Vertex* >> floors;
     vector<Vertex *> floorStartingVertices;
 
-    vector<IntervalMap<Vertex>* > intervals;
     vector<Edge *> edges;
+
 
     int currID = 0;
     Range * r = new Range(0,0);
+
+    Vertex * finalVertex = new Vertex(-1, -1, r);
+
+    IntervalMap<Vertex> * prevInterval;
+
     for(int i = 0; i < platformsCount; i++){
         r->min = 0;
         r->max = 0;
@@ -152,45 +157,42 @@ int main() {
             if(j == 0){
                 floorStartingVertices.push_back(v);
             }
+
+            if(i > 0){
+                prevInterval->getObject(v->rangeInPlatform->max + 1);
+                cout<<"";
+            }
+        }
+
+        if(i > 0){
+            delete prevInterval;
+        }
+        if(i != platformsCount - 1) {
+            prevInterval = interval;
+        }else{
+            delete interval;
         }
         floors.push_back(floor);
-        intervals.push_back(interval);
     }
-
-    for(int i = 0; i < floors.size(); i++){
-        for(int j = 0; j < floors[i].size() - 1; j ++){
-
-            Vertex * subjectVertex = floors[i][j];
-            Vertex * nextVertex = intervals[i]->getObject(subjectVertex->rangeInPlatform->max + 2);
-
-            Edge * sameLevel = new Edge(subjectVertex, nextVertex, true);
-            edges.push_back(sameLevel);
-            subjectVertex->outputEdges.push_back(sameLevel);
-            nextVertex->inputEdges.push_back(sameLevel);
-
-            if( i > floors.size() - 1 ){
-                Vertex * underVertex = intervals[i + 1]->getObject(subjectVertex->rangeInPlatform->max + 1);
-                Edge * downToUp = new Edge(underVertex, nextVertex, true);
-                edges.push_back(downToUp);
-                underVertex->outputEdges.push_back(downToUp);
-                nextVertex->inputEdges.push_back(downToUp);
-
-                Edge * upToDown = new Edge(subjectVertex, underVertex, false);
-                edges.push_back(upToDown);
-                subjectVertex->outputEdges.push_back(upToDown);
-                underVertex->inputEdges.push_back(upToDown);
-            }
-
+    vector<Vertex *> ordered = topologicalSort(floors);
+    for(auto v : floors){
+        int i = 0;
+        for(auto f : v){
+            if(i != 0)
+                delete f;
+            i++;
         }
     }
-
-    for(auto i : intervals){
-        delete i;
-    }
-
-    vector<Vertex *> ordered = topologicalSort(floors);
     findShortestPaths(ordered);
 
+    for(auto v : ordered){
+        delete v;
+    }
+    for(auto e : edges){
+        delete e;
+    }
+    delete r;
+    delete finalVertex;
 
     for(int i = 0; i < requestsCount; i ++){
         getline(cin, line);
@@ -198,18 +200,11 @@ int main() {
         int platformCount = stoi(args[0]) - 1;
         cout<<floorStartingVertices[platformCount]->shortestPath<<"\n";
     }
-    for(auto v : floors){
-        for(auto f : v){
-            delete f;
-        }
+
+    for(auto n : floorStartingVertices){
+        delete n;
     }
-    for(auto v : ordered){
-        delete v;
-    }
-    delete r;
-    for(auto e : edges){
-        delete e;
-    }
+
 
     cout<<"";
     return 0;
