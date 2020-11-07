@@ -17,8 +17,7 @@ struct Range{
     }
 };
 struct Vertex{
-    vector<Edge *> inputEdges;
-    vector<Edge *> outputEdges;
+    vector<pair<int, bool>> edges;//the outputVertices looking from final vertex to the startpoint
     int id;
     int numInFloor;
     int shortestPath = 2147483600;
@@ -33,17 +32,6 @@ struct Vertex{
         delete rangeInPlatform;
     }
 };
-struct Edge{
-    Vertex * input;
-    Vertex * output;
-    bool weight;
-    Edge(Vertex * i, Vertex * o, bool w){
-        this->input = i;
-        this->output = o;
-        this->weight = w;
-    }
-
-};
 vector<Vertex*> topologicalSort(vector<vector<Vertex*>> &floors){
     vector<Vertex*> order;
 
@@ -51,14 +39,6 @@ vector<Vertex*> topologicalSort(vector<vector<Vertex*>> &floors){
 }
 void findShortestPaths(const vector<Vertex *> &vertices){
     return;
-    vertices[0]->shortestPath = 0;
-    for(auto v : vertices){
-        for(auto e : v->inputEdges){
-            if(v->shortestPath + e->weight < e->input->shortestPath){
-                e->input->shortestPath = v->shortestPath + e->weight;
-            }
-        }
-    }
 }
 template <typename T>
 struct IntervalMap{
@@ -90,7 +70,6 @@ struct IntervalMap{
         for(auto p : interval){
             delete p.first;
         }
-        interval.clear();
     }
 };
 
@@ -118,17 +97,11 @@ int main() {
     int requestsCount = stoi(args[2]);
 
     vector<vector<Vertex* >> floors;
-    vector<Vertex *> floorStartingVertices;
-
-    vector<Edge *> edges;
-
 
     int currID = 0;
     Range * r = new Range(0,0);
 
     Vertex * finalVertex = new Vertex(-1, -1, r);
-
-    IntervalMap<Vertex> * prevInterval;
 
     for(int i = 0; i < platformsCount; i++){
         r->min = 0;
@@ -154,55 +127,41 @@ int main() {
             currID ++;
             interval->pushBack(r, v);
             floor.push_back(v);
-            if(j == 0){
-                floorStartingVertices.push_back(v);
-            }
-
-            if(i > 0){
-                prevInterval->getObject(v->rangeInPlatform->max + 1);
-                cout<<"";
-            }
         }
 
-        if(i > 0){
-            delete prevInterval;
+        if( i > 0 ){
+            for(int j = 0; j < floors[i - 1].size() - 1; j ++){
+                Vertex * subjectVertex = floors[i - 1][j];//from 0 to platformsCount - 1;
+                Vertex * sameLineVertex = floors[i - 1][j + 1];
+                Vertex * underVertex = interval->getObject(subjectVertex->rangeInPlatform->max + 1);
+
+                sameLineVertex->edges.emplace_back(subjectVertex->id, true);
+                sameLineVertex->edges.emplace_back(underVertex->id, true);
+                underVertex->edges.emplace_back(subjectVertex->id, false);
+            }
         }
-        if(i != platformsCount - 1) {
-            prevInterval = interval;
-        }else{
-            delete interval;
-        }
+
+        delete interval;
         floors.push_back(floor);
     }
-    vector<Vertex *> ordered = topologicalSort(floors);
+
     for(auto v : floors){
         int i = 0;
         for(auto f : v){
-            if(i != 0)
-                delete f;
-            i++;
+            delete f;
         }
     }
-    findShortestPaths(ordered);
+   // findShortestPaths(ordered);
 
-    for(auto v : ordered){
+  /*  for(auto v : ordered){
         delete v;
-    }
-    for(auto e : edges){
-        delete e;
-    }
+    }*/
     delete r;
     delete finalVertex;
 
     for(int i = 0; i < requestsCount; i ++){
         getline(cin, line);
         args = split(line, ' ');
-        int platformCount = stoi(args[0]) - 1;
-        cout<<floorStartingVertices[platformCount]->shortestPath<<"\n";
-    }
-
-    for(auto n : floorStartingVertices){
-        delete n;
     }
 
 
