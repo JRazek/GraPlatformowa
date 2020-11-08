@@ -7,7 +7,6 @@
 
 using namespace std;
 struct Vertex;
-struct Edge;
 struct Range{
     int min;
     int max;
@@ -17,7 +16,7 @@ struct Range{
     }
 };
 struct Vertex{
-    vector<pair<int, bool>> edges;//the outputVertices looking from final vertex to the startpoint
+    vector<pair<int, bool>> edges;//the outputVertices looking from final vertex to the start point
     int id;
     int shortestPath = 2147483600;
     bool visited = false;
@@ -30,12 +29,39 @@ struct Vertex{
 
     }
 };
-vector<Vertex*> topologicalSort(vector<Vertex *> &floorsStarting, vector<Vertex *> &vertices){
-    vector<Vertex*> order;
+vector<Vertex*> topologicalSort(vector<Vertex *> &vertices){
+    vector<Vertex*> reversedOrder;
 
-    return order;
+    stack<int> queue;
+    queue.push(vertices.back()->id);
+    while(!queue.empty()){
+        Vertex * subject = vertices[queue.top()];
+        int i = 0;
+        for(auto e : subject->edges){
+            if(!vertices[e.first]->visited){
+                queue.push(e.first);
+                i++;
+            }
+        }
+        if(!i){
+            reversedOrder.push_back(subject);
+            queue.pop();
+        }
+        subject->visited = true;
+    }
+    return reversedOrder;
 }
-void findShortestPaths(const vector<Vertex *> &vertices){
+void findShortestPaths(const vector<Vertex *> &reversedOrder, const vector<Vertex *> &vertices){
+    reversedOrder[reversedOrder.size() - 1]->shortestPath = 0;
+    for(int i = 0; i < reversedOrder.size(); i ++){
+        Vertex * v = reversedOrder[reversedOrder.size() - 1 - i];
+        for(auto e : v->edges){
+            Vertex * neighbour = vertices[e.first];
+            if(neighbour->shortestPath > v->shortestPath + e.second){
+               neighbour->shortestPath = v->shortestPath + e.second;
+            }
+        }
+    }
     return;
 }
 template <typename T>
@@ -97,7 +123,7 @@ int main() {
     vector<vector<Vertex* >> floors;
 
     vector<Vertex*> vertices;
-    vector<Vertex*> floorStartingVertex;
+    vector<int> floorStartingVertex;
 
     int currID = 0;
     Range * r = new Range(0,0);
@@ -150,7 +176,7 @@ int main() {
         }
         delete interval;
         floors.push_back(floor);
-        floorStartingVertex.push_back(floors[i][0]);
+        floorStartingVertex.push_back(floors[i][0]->id);
         finalVertex->edges.emplace_back(floors[i][floors[i].size() - 1]->id, false);
         if(i == platformsCount - 1){
             for(auto n : floors[i]){
@@ -159,25 +185,31 @@ int main() {
         }
     }
     floors.clear();
+    delete finalVertex->rangeInPlatform;
 
-    vector<Vertex *> ordered = topologicalSort(floorStartingVertex, vertices);
-    // findShortestPaths(ordered);
+    finalVertex->id = vertices.size();
+    vertices.push_back(finalVertex);
+
+    //vector<Vertex *> ordered = topologicalSort(vertices);
+    //findShortestPaths(ordered, vertices);
+
+
+
+
+    for(int i = 0; i < requestsCount; i ++){
+        getline(cin, line);
+        args = split(line, ' ');
+        int platformNum = stoi(args[0]) - 1;
+        cout<<vertices[floorStartingVertex[platformNum]]->shortestPath<<"\n";
+    }
 
     for(auto v : vertices){
         delete v;
         //put that in topologicalSort function and delete as soon as you put in the order vector
     }
 
-    for(int i = 0; i < requestsCount; i ++){
-        getline(cin, line);
-        args = split(line, ' ');
-    }
 
 
-
-
-    delete finalVertex->rangeInPlatform;
-    delete finalVertex;
 
 
     delete r;
