@@ -27,90 +27,24 @@ struct Vertex{
         rangeInPlatform = new Range(r->min, r->max);
     }
 };
-vector<int> topologicalSort(vector<Vertex *> &vertices, int startingVertex){
-    vector<int> reversedOrder;
 
+void findShortestPath(vector<Vertex *> &vertices, int startPoint){
     stack<int> queue;
-    queue.push(vertices[startingVertex]->id);
-    while (!queue.empty()){
-        Vertex * v = vertices[queue.top()];
+    Vertex * root = vertices[startPoint];
+    root->shortestPath = 0;
+    queue.push(root->id);
+    while(!queue.empty()){
+        Vertex * subject = vertices[queue.top()];
         queue.pop();
-        for(int i = 0; i < v->edges.size(); i ++){
-            Vertex * n = vertices[v->edges[i].first];
-            if(!n->deleted){
-                n->inDegree -- ;
-                if(n->inDegree == 0){
-                    queue.push(n->id);
-                }
-            }
-        }
-        reversedOrder.push_back(v->id);
-        v->deleted = true;
-    }
-    return reversedOrder;
-}
-void findShortestPaths(const vector<int> &reversedOrder, vector<Vertex *> &vertices){
-    vertices[reversedOrder[0]]->shortestPath = 0;
-    for(int i = 0; i < reversedOrder.size(); i ++){
-        Vertex * v = vertices[reversedOrder[i]];
-        for(auto e : v->edges){
-            Vertex * neighbour = vertices[e.first];
-            if(neighbour->shortestPath > v->shortestPath + e.second){
-               neighbour->shortestPath = v->shortestPath + e.second;
+        for(int i = 0; i < subject->edges.size(); i ++){
+            Vertex * neighbour = vertices[subject->edges[i].first];
+            if(subject->shortestPath + subject->edges[i].second < neighbour->shortestPath){
+                neighbour->shortestPath = subject->shortestPath + subject->edges[i].second;
+                queue.push(neighbour->id);
             }
         }
     }
 }
-template <typename T>
-struct IntervalMap{
-    vector<pair<Range *, T* >> interval;
-    void pushBack(Range * r, T* o){
-        interval.push_back(make_pair(new Range(r->min, r->max), o));
-    }
-    T* getObject(const int point){
-        int min = 0;
-        int max = interval.size();
-
-        ;//points to index in vector!
-        int pointer;
-        while(true){
-            pointer = (max - min) / 2 + min;
-            Range * r = interval[pointer].first;
-            if(r->min <= point && r->max >= point)
-                return interval[pointer].second;
-
-            if(point > r->max){
-                min = pointer;
-            }
-            if(point < r->min){
-                max = pointer;
-            }
-        }
-    }
-    ~IntervalMap(){
-        for(auto p : interval){
-            delete p.first;
-        }
-    }
-};
-
-int countInDegrees(vector<Vertex *> vertices){//returns the node with the 0 degree
-    for(int i = 0; i < vertices.size(); i ++){
-        Vertex * subject = vertices[i];
-        for(int j = 0; j < subject->edges.size(); j++){
-            Vertex * neighbour = vertices[subject->edges[j].first];
-            neighbour->inDegree ++;
-        }
-    }
-    for(int i = 0; i < vertices.size(); i ++){
-        Vertex * subject = vertices[i];
-        if(subject->inDegree == 0)
-            return subject->id;
-    }
-    cout<<"ERROR!";
-    return -1;
-}
-
 
 vector<string> split(string str, char divider){
     vector<string> result;
@@ -181,9 +115,10 @@ int main() {
 
                 Vertex * sameLineVertex = floors[i - 1][j + 1];
                 Vertex * underVertex = interval->getObject(subjectVertex->rangeInPlatform->max + 1);
-                edgeCount += 2;
+
                 sameLineVertex->edges.emplace_back(underVertex->id, true);
                 underVertex->edges.emplace_back(subjectVertex->id, false);
+
                 delete subjectVertex->rangeInPlatform;
                 if(j == floors[i - 1].size() - 2){
                     delete sameLineVertex->rangeInPlatform;
@@ -197,7 +132,7 @@ int main() {
         finalVertex->edges.emplace_back(floors[i][floors[i].size() - 1]->id, false);
 
         for(int j = 0; j < floors[i].size() - 1; j ++){
-            Vertex * subjectVertex = floors[i][j];//from 0 to platformsCount - 1;
+            Vertex * subjectVertex = floors[i][j];
             Vertex * sameLineVertex = floors[i][j + 1];
             sameLineVertex->edges.emplace_back(subjectVertex->id, true);
             edgeCount +=1;
@@ -213,10 +148,8 @@ int main() {
 
     finalVertex->id = vertices.size();
     vertices.push_back(finalVertex);
-    int zerothVertex = countInDegrees(vertices);
-    vector<int> ordered = topologicalSort(vertices, zerothVertex);
-    findShortestPaths(ordered, vertices);
 
+    findShortestPath(vertices, vertices.size() - 1);
 
 
 
