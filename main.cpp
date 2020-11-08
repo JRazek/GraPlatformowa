@@ -48,6 +48,7 @@ vector<int> topologicalSort(vector<Vertex *> &vertices){
     return reversedOrder;
 }
 void findShortestPaths(const vector<int> &reversedOrder, vector<Vertex *> &vertices){
+    return;
     vertices[reversedOrder[reversedOrder.size() - 1]]->shortestPath = 0;
     for(int i = 0; i < reversedOrder.size(); i ++){
         Vertex * v = vertices[reversedOrder[reversedOrder.size() - 1 - i]];
@@ -174,6 +175,13 @@ int main() {
         floors.push_back(floor);
         floorStartingVertex.push_back(floors[i][0]->id);
         finalVertex->edges.emplace_back(floors[i][floors[i].size() - 1]->id, false);
+
+        for(int j = 0; j < floors[i].size() - 1; j ++){
+            Vertex * subjectVertex = floors[i][j];//from 0 to platformsCount - 1;
+            Vertex * sameLineVertex = floors[i][j + 1];
+            sameLineVertex->edges.push_back(make_pair(subjectVertex->id, true));
+            edgeCount+=1;
+        }
         if(i == platformsCount - 1){
             for(auto n : floors[i]){
                 delete n->rangeInPlatform;
@@ -187,7 +195,7 @@ int main() {
     vertices.push_back(finalVertex);
 
     vector<int> ordered = topologicalSort(vertices);
-    findShortestPaths(ordered, vertices);
+    //findShortestPaths(ordered, vertices);
 
 
 
