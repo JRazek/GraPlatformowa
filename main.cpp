@@ -46,6 +46,39 @@ void findShortestPath(vector<Vertex *> &vertices, int startPoint){
     }
 }
 
+template <typename T>
+struct IntervalMap{
+    vector<pair<Range *, T* >> interval;
+    void pushBack(Range * r, T* o){
+        interval.push_back(make_pair(new Range(r->min, r->max), o));
+    }
+    T* getObject(const int point){
+        int min = 0;
+        int max = interval.size();
+
+        ;//points to index in vector!
+        int pointer;
+        while(true){
+            pointer = (max - min) / 2 + min;
+            Range * r = interval[pointer].first;
+            if(r->min <= point && r->max >= point)
+                return interval[pointer].second;
+
+            if(point > r->max){
+                min = pointer;
+            }
+            if(point < r->min){
+                max = pointer;
+            }
+        }
+    }
+    ~IntervalMap(){
+        for(auto p : interval){
+            delete p.first;
+        }
+    }
+};
+
 vector<string> split(string str, char divider){
     vector<string> result;
 
