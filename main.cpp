@@ -1,6 +1,4 @@
 #include <iostream>
-#include <math.h>
-#include <memory>
 #include <map>
 #include <stack>
 #include <vector>
@@ -29,12 +27,13 @@ struct Vertex{
 
     }
 };
-vector<Vertex*> topologicalSort(vector<Vertex *> &vertices){
-    vector<Vertex*> reversedOrder;
+vector<int> topologicalSort(vector<Vertex *> &vertices){
+    vector<int> reversedOrder;
 
     stack<int> queue;
+
     queue.push(vertices.back()->id);
-    while(!queue.empty()){
+    while(!queue.empty()) {
         Vertex * subject = vertices[queue.top()];
         int i = 0;
         for(auto e : subject->edges){
@@ -43,18 +42,18 @@ vector<Vertex*> topologicalSort(vector<Vertex *> &vertices){
                 i++;
             }
         }
-        if(!i){
-            reversedOrder.push_back(subject);
+        if(subject->visited){
+            reversedOrder.push_back(subject->id);
             queue.pop();
         }
         subject->visited = true;
     }
     return reversedOrder;
 }
-void findShortestPaths(const vector<Vertex *> &reversedOrder, const vector<Vertex *> &vertices){
-    reversedOrder[reversedOrder.size() - 1]->shortestPath = 0;
+void findShortestPaths(const vector<int> &reversedOrder, vector<Vertex *> &vertices){
+    vertices[reversedOrder[reversedOrder.size() - 1]]->shortestPath = 0;
     for(int i = 0; i < reversedOrder.size(); i ++){
-        Vertex * v = reversedOrder[reversedOrder.size() - 1 - i];
+        Vertex * v = vertices[reversedOrder[reversedOrder.size() - 1 - i]];
         for(auto e : v->edges){
             Vertex * neighbour = vertices[e.first];
             if(neighbour->shortestPath > v->shortestPath + e.second){
@@ -190,8 +189,8 @@ int main() {
     finalVertex->id = vertices.size();
     vertices.push_back(finalVertex);
 
-    //vector<Vertex *> ordered = topologicalSort(vertices);
-    //findShortestPaths(ordered, vertices);
+    vector<int> ordered = topologicalSort(vertices);
+    findShortestPaths(ordered, vertices);
 
 
 
