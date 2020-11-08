@@ -23,9 +23,6 @@ struct Vertex{
         this->id = id;
         rangeInPlatform = new Range(r->min, r->max);
     }
-    ~Vertex(){
-
-    }
 };
 vector<int> topologicalSort(vector<Vertex *> &vertices){
     vector<int> reversedOrder;
@@ -34,21 +31,26 @@ vector<int> topologicalSort(vector<Vertex *> &vertices){
 
     int visitedCount = 0;
     queue.push(vertices.back()->id);
-    while(!queue.empty()) {
+    while (!queue.empty()){
         Vertex * subject = vertices[queue.top()];
-        queue.pop();
-        visitedCount++;
         subject->visited = true;
+        bool noNeighbours = true;
         for(auto e : subject->edges){
-            if(!vertices[e.first]->visited){
-                queue.push(e.first);
+            Vertex * neighbour = vertices[e.first];
+            if(!neighbour->visited){
+                queue.push(neighbour->id);
+                noNeighbours = false;
             }
+        }
+        if(noNeighbours){
+            queue.pop();
+            reversedOrder.push_back(subject->id);
+            visitedCount++;
         }
     }
     return reversedOrder;
 }
 void findShortestPaths(const vector<int> &reversedOrder, vector<Vertex *> &vertices){
-    return;
     vertices[reversedOrder[reversedOrder.size() - 1]]->shortestPath = 0;
     for(int i = 0; i < reversedOrder.size(); i ++){
         Vertex * v = vertices[reversedOrder[reversedOrder.size() - 1 - i]];
@@ -126,6 +128,7 @@ int main() {
     Range * r = new Range(0,0);
 
     Vertex * finalVertex = new Vertex(-1, -1, r);
+    int predictedEdgeCount = 0;
     int edgeCount = 0;
     for(int i = 0; i < platformsCount; i++){
         r->min = 0;
@@ -133,6 +136,8 @@ int main() {
         getline(cin, line);
         args = split(line, ' ');
         int holesCount = stoi(args[0]);
+
+        predictedEdgeCount += (i != platformsCount - 1) ? holesCount * 3 : holesCount;
 
         IntervalMap<Vertex> * interval = new IntervalMap<Vertex>();
         vector<Vertex *> floor;
@@ -148,7 +153,6 @@ int main() {
             }
 
             Vertex * v = new Vertex(currID, j, r);
-            currID ++;
             vertices.push_back(v);
             interval->pushBack(r, v);
             floor.push_back(v);
@@ -160,10 +164,9 @@ int main() {
 
                 Vertex * sameLineVertex = floors[i - 1][j + 1];
                 Vertex * underVertex = interval->getObject(subjectVertex->rangeInPlatform->max + 1);
-
+                edgeCount += 2;
                 sameLineVertex->edges.emplace_back(underVertex->id, true);
                 underVertex->edges.emplace_back(subjectVertex->id, false);
-                edgeCount+=2;
                 delete subjectVertex->rangeInPlatform;
                 if(j == floors[i - 1].size() - 2){
                     delete sameLineVertex->rangeInPlatform;
@@ -179,8 +182,8 @@ int main() {
         for(int j = 0; j < floors[i].size() - 1; j ++){
             Vertex * subjectVertex = floors[i][j];//from 0 to platformsCount - 1;
             Vertex * sameLineVertex = floors[i][j + 1];
-            sameLineVertex->edges.push_back(make_pair(subjectVertex->id, true));
-            edgeCount+=1;
+            sameLineVertex->edges.emplace_back(subjectVertex->id, true);
+            edgeCount +=1;
         }
         if(i == platformsCount - 1){
             for(auto n : floors[i]){
@@ -195,7 +198,7 @@ int main() {
     vertices.push_back(finalVertex);
 
     vector<int> ordered = topologicalSort(vertices);
-    //findShortestPaths(ordered, vertices);
+    findShortestPaths(ordered, vertices);
 
 
 
