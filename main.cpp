@@ -1,7 +1,6 @@
 #include <iostream>
 #include <map>
 #include <stack>
-#include <unordered_set>
 #include <vector>
 
 using namespace std;
@@ -18,21 +17,42 @@ struct Vertex{
     vector<pair<int, bool>> edges;//the outputVertices looking from final vertex to the start point
     int id;
     int shortestPath = 2147483600;
-    bool visited = false;
+    bool deleted = false;
     int inDegree = 0;
     Range * rangeInPlatform;
+    int numInFloor;
     Vertex(int id, int numInFloor, Range * r){
         this->id = id;
+        this->numInFloor = numInFloor;
         rangeInPlatform = new Range(r->min, r->max);
     }
 };
-vector<int> topologicalSort(vector<Vertex *> &vertices){
-    
+vector<int> topologicalSort(vector<Vertex *> &vertices, int startingVertex){
+    vector<int> reversedOrder;
+
+    stack<int> queue;
+    queue.push(vertices[startingVertex]->id);
+    while (!queue.empty()){
+        Vertex * v = vertices[queue.top()];
+        queue.pop();
+        for(int i = 0; i < v->edges.size(); i ++){
+            Vertex * n = vertices[v->edges[i].first];
+            if(!n->deleted){
+                n->inDegree -- ;
+                if(n->inDegree == 0){
+                    queue.push(n->id);
+                }
+            }
+        }
+        reversedOrder.push_back(v->id);
+        v->deleted = true;
+    }
+    return reversedOrder;
 }
 void findShortestPaths(const vector<int> &reversedOrder, vector<Vertex *> &vertices){
-    vertices[reversedOrder[reversedOrder.size() - 1]]->shortestPath = 0;
+    vertices[reversedOrder[0]]->shortestPath = 0;
     for(int i = 0; i < reversedOrder.size(); i ++){
-        Vertex * v = vertices[reversedOrder[reversedOrder.size() - 1 - i]];
+        Vertex * v = vertices[reversedOrder[i]];
         for(auto e : v->edges){
             Vertex * neighbour = vertices[e.first];
             if(neighbour->shortestPath > v->shortestPath + e.second){
@@ -40,7 +60,6 @@ void findShortestPaths(const vector<int> &reversedOrder, vector<Vertex *> &verti
             }
         }
     }
-    return;
 }
 template <typename T>
 struct IntervalMap{
@@ -88,6 +107,8 @@ int countInDegrees(vector<Vertex *> vertices){//returns the node with the 0 degr
         if(subject->inDegree == 0)
             return subject->id;
     }
+    cout<<"ERROR!";
+    return -1;
 }
 
 
@@ -193,7 +214,7 @@ int main() {
     finalVertex->id = vertices.size();
     vertices.push_back(finalVertex);
     int zerothVertex = countInDegrees(vertices);
-    vector<int> ordered = topologicalSort(vertices);
+    vector<int> ordered = topologicalSort(vertices, zerothVertex);
     findShortestPaths(ordered, vertices);
 
 
