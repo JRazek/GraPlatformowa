@@ -1,6 +1,7 @@
 #include <iostream>
 #include <map>
 #include <stack>
+#include <unordered_set>
 #include <vector>
 
 using namespace std;
@@ -18,6 +19,7 @@ struct Vertex{
     int id;
     int shortestPath = 2147483600;
     bool visited = false;
+    int inDegree = 0;
     Range * rangeInPlatform;
     Vertex(int id, int numInFloor, Range * r){
         this->id = id;
@@ -25,30 +27,7 @@ struct Vertex{
     }
 };
 vector<int> topologicalSort(vector<Vertex *> &vertices){
-    vector<int> reversedOrder;
-
-    stack<int> queue;
-
-    int visitedCount = 0;
-    queue.push(vertices.back()->id);
-    while (!queue.empty()){
-        Vertex * subject = vertices[queue.top()];
-        subject->visited = true;
-        bool noNeighbours = true;
-        for(auto e : subject->edges){
-            Vertex * neighbour = vertices[e.first];
-            if(!neighbour->visited){
-                queue.push(neighbour->id);
-                noNeighbours = false;
-            }
-        }
-        if(noNeighbours){
-            queue.pop();
-            reversedOrder.push_back(subject->id);
-            visitedCount++;
-        }
-    }
-    return reversedOrder;
+    
 }
 void findShortestPaths(const vector<int> &reversedOrder, vector<Vertex *> &vertices){
     vertices[reversedOrder[reversedOrder.size() - 1]]->shortestPath = 0;
@@ -95,6 +74,22 @@ struct IntervalMap{
         }
     }
 };
+
+int countInDegrees(vector<Vertex *> vertices){//returns the node with the 0 degree
+    for(int i = 0; i < vertices.size(); i ++){
+        Vertex * subject = vertices[i];
+        for(int j = 0; j < subject->edges.size(); j++){
+            Vertex * neighbour = vertices[subject->edges[j].first];
+            neighbour->inDegree ++;
+        }
+    }
+    for(int i = 0; i < vertices.size(); i ++){
+        Vertex * subject = vertices[i];
+        if(subject->inDegree == 0)
+            return subject->id;
+    }
+}
+
 
 vector<string> split(string str, char divider){
     vector<string> result;
@@ -156,6 +151,7 @@ int main() {
             vertices.push_back(v);
             interval->pushBack(r, v);
             floor.push_back(v);
+            currID++;
         }
 
         if( i > 0 ){
@@ -196,7 +192,7 @@ int main() {
 
     finalVertex->id = vertices.size();
     vertices.push_back(finalVertex);
-
+    int zerothVertex = countInDegrees(vertices);
     vector<int> ordered = topologicalSort(vertices);
     findShortestPaths(ordered, vertices);
 
