@@ -32,21 +32,18 @@ vector<int> topologicalSort(vector<Vertex *> &vertices){
 
     stack<int> queue;
 
+    int visitedCount = 0;
     queue.push(vertices.back()->id);
     while(!queue.empty()) {
         Vertex * subject = vertices[queue.top()];
-        int i = 0;
+        queue.pop();
+        visitedCount++;
+        subject->visited = true;
         for(auto e : subject->edges){
             if(!vertices[e.first]->visited){
                 queue.push(e.first);
-                i++;
             }
         }
-        if(subject->visited){
-            reversedOrder.push_back(subject->id);
-            queue.pop();
-        }
-        subject->visited = true;
     }
     return reversedOrder;
 }
@@ -128,7 +125,7 @@ int main() {
     Range * r = new Range(0,0);
 
     Vertex * finalVertex = new Vertex(-1, -1, r);
-
+    int edgeCount = 0;
     for(int i = 0; i < platformsCount; i++){
         r->min = 0;
         r->max = 0;
@@ -163,16 +160,16 @@ int main() {
                 Vertex * sameLineVertex = floors[i - 1][j + 1];
                 Vertex * underVertex = interval->getObject(subjectVertex->rangeInPlatform->max + 1);
 
-                sameLineVertex->edges.emplace_back(subjectVertex->id, true);
                 sameLineVertex->edges.emplace_back(underVertex->id, true);
                 underVertex->edges.emplace_back(subjectVertex->id, false);
-
+                edgeCount+=2;
                 delete subjectVertex->rangeInPlatform;
                 if(j == floors[i - 1].size() - 2){
                     delete sameLineVertex->rangeInPlatform;
                 }
             }
         }
+
         delete interval;
         floors.push_back(floor);
         floorStartingVertex.push_back(floors[i][0]->id);
