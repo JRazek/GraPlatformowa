@@ -43,6 +43,9 @@ void findShortestPath(vector<Vertex *> &vertices, int startPoint){
                 queue.push(neighbour->id);
             }
         }
+        if(queue.size() >= vertices.size()){
+            cout<<"here";
+        }
     }
 }
 
@@ -56,7 +59,7 @@ struct IntervalMap{
         int min = 0;
         int max = interval.size();
 
-        ;//points to index in vector!
+        ;//points to index in vector!//
         int pointer;
         while(true){
             pointer = (max - min) / 2 + min;
@@ -199,13 +202,6 @@ int main() {
     }
 
 
-
-
-
     delete r;
-
-
-
-    cout<<"";
     return 0;
 }
