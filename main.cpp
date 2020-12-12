@@ -107,7 +107,7 @@ int main() {
 
     vector<vector<Vertex* >> floors;
 
-    vector<Vertex*> vertices;
+    vector<Vertex*> vertices;//
     vector<int> floorStartingVertex;
 
     int currID = 0;
